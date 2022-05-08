@@ -3,12 +3,12 @@
     <dbname value="cool_weather">
 
     </dbname>
-    <version value="1">
+    <version value="2">
 
     </version>
     <list>
         <mapping class="com.example.sunnyweather.db.Province" />
-        <mapping class="com.example.litepaltest.City" />
-        <mapping class="com.example.litepaltest.Country" />
+        <mapping class="com.example.sunnyweather.db.City" />
+        <mapping class="com.example.sunnyweather.db.County" />
     </list>
 </litepal>
