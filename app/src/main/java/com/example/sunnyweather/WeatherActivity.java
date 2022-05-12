@@ -1,19 +1,26 @@
 package com.example.sunnyweather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
 import com.example.sunnyweather.gson.Weather;
+import com.example.sunnyweather.service.AutoUpdateService;
+import com.example.sunnyweather.util.HttpUtil;
 import com.example.sunnyweather.util.Utility;
 import com.google.gson.Gson;
 import com.qweather.sdk.bean.air.AirNowBean;
@@ -25,11 +32,16 @@ import com.qweather.sdk.view.HeConfig;
 import com.qweather.sdk.view.QWeather;
 
 
+import java.io.IOException;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 public class WeatherActivity extends BaseActivity {
 
@@ -41,6 +53,7 @@ public class WeatherActivity extends BaseActivity {
 
     private String weatherId;
     private String countyName;
+    private String bingPic;
 
     public DrawerLayout drawerLayout;
     public SwipeRefreshLayout swipeRefresh;
@@ -54,12 +67,18 @@ public class WeatherActivity extends BaseActivity {
     private LinearLayout forecastLayout;
     private TextView aqiText;
     private TextView pm25Text;
+    private ImageView bingPicImg;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
         setContentView(R.layout.activity_weather);
 
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
@@ -73,6 +92,7 @@ public class WeatherActivity extends BaseActivity {
         swipeRefresh = findViewById(R.id.swipe_refresh);
         drawerLayout = findViewById(R.id.drawer_layout);
         navButton = findViewById(R.id.nav_button);
+        bingPicImg = findViewById(R.id.bing_pic_img);
 
         swipeRefresh.setColorSchemeResources(R.color.purple_500);
         navButton.setOnClickListener(view->{
@@ -82,6 +102,12 @@ public class WeatherActivity extends BaseActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         countyName = prefs.getString("county_name", null);
         weatherId = prefs.getString("weather_id", null);
+        bingPic = prefs.getString("bing_pic", null);
+        if (bingPic != null) {
+            Glide.with(this).load(bingPic).into(bingPicImg);
+        }else {
+            loadBingPic();
+        }
         if (weatherId == null && countyName == null) {
             countyName = getIntent().getStringExtra("county_name");
             weatherId = getIntent().getStringExtra("weather_id");
@@ -132,7 +158,11 @@ public class WeatherActivity extends BaseActivity {
 
         swipeRefresh.setOnRefreshListener(() -> {
             requestWeather(weatherId);
+            swipeRefresh.setRefreshing(false);
         });
+
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 
     //获取实时空气数据
@@ -239,6 +269,7 @@ public class WeatherActivity extends BaseActivity {
         });
     }
 
+    //改变区域
     public void onChangeArea(String weatherId, String countyName) {
         SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences
                 (WeatherActivity.this).edit();
@@ -253,13 +284,34 @@ public class WeatherActivity extends BaseActivity {
         this.swipeRefresh.setRefreshing(false);
     }
 
+    //请求汇总
     public void requestWeather(String weatherId) {
         requestAirNow(weatherId);
         requestWeatherNow(weatherId);
         requestWeather3D(weatherId);
-        swipeRefresh.setRefreshing(false);
+
     }
 
+    private void loadBingPic() {
+        String requestBingPic = "http://guolin.tech/api/bing_pic";
+        HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                e.printStackTrace();
+            }
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                final String bingPic = response.body().string();
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences
+                        (WeatherActivity.this).edit();
+                editor.putString("bing_pic", bingPic);
+                editor.apply();
+                runOnUiThread(()->{
+                    Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                });
+            }
+        });
+    }
 
     private void showAirInfo(AirNowBean.NowBean airNow) {
         pm25Text.setText(airNow.getPm2p5());
