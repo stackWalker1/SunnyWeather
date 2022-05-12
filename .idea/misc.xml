@@ -4,7 +4,13 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/activity_main.xml" value="0.36614583333333334" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/activity_weather.xml" value="0.36614583333333334" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/aqi.xml" value="0.36614583333333334" />
         <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/choose_area.xml" value="0.1875" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/forecast.xml" value="0.36614583333333334" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/forecast_item.xml" value="0.36614583333333334" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/now.xml" value="0.36614583333333334" />
+        <entry key="..\:/Study/AdroidProj/SunnyWeather/app/src/main/res/layout/title.xml" value="0.36614583333333334" />
       </map>
     </option>
   </component>
